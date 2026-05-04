@@ -1,0 +1,110 @@
+{
+	"name": "df_Inventario_BRONCE_a_PLATA",
+	"properties": {
+		"folder": {
+			"name": "BRONCE"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Inventario_xlsx",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Inventario_Limpio",
+						"type": "DatasetReference"
+					},
+					"name": "sink1",
+					"rejectedDataLinkedService": {
+						"referenceName": "AzureDataLake_Ventas",
+						"type": "LinkedServiceReference"
+					}
+				}
+			],
+			"transformations": [
+				{
+					"name": "select1"
+				},
+				{
+					"name": "TODO"
+				},
+				{
+					"name": "filter1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          codigo_producto as string,",
+				"          nombre_producto as string,",
+				"          categoria as string,",
+				"          precio_venta as string,",
+				"          costo_adquisicion as string,",
+				"          stock_actual as string,",
+				"          stock_minimo as string,",
+				"          sucursal as string,",
+				"          proveedor as string,",
+				"          ultima_reposicion as string,",
+				"          activo as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 select(mapColumn(",
+				"          codigo_producto,",
+				"          nombre_producto,",
+				"          categoria,",
+				"          precio_venta,",
+				"          costo_adquisicion,",
+				"          stock_actual,",
+				"          stock_minimo,",
+				"          sucursal,",
+				"          proveedor,",
+				"          ultima_reposicion,",
+				"          activo",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 derive(nombre_producto = initCap(trim(regexReplace(replace(toString(nombre_producto), '\"', ''), '\\\\s+', ' '))),",
+				"          sucursal = case(isNull(sucursal) || trim(toString(sucursal)) == '', 'No Especificada', in(['santa cruz', 'scz'], lower(trim(toString(sucursal)))), 'Santa Cruz', in(['cochabamba', 'cbba'], lower(trim(toString(sucursal)))), 'Cochabamba', in(['la paz', 'lp', 'lapaz'], lower(trim(toString(sucursal)))), 'La Paz', in(['potosi', 'potosí'], lower(trim(toString(sucursal)))), 'Potosí', initCap(trim(toString(sucursal)))),",
+				"          categoria = initCap(trim(toString(categoria))),",
+				"          proveedor = initCap(trim(toString(proveedor))),",
+				"          precio_venta = iif(isNull(precio_venta) || trim(toString(precio_venta)) == '', toFloat(0.0), toFloat(round(toFloat(trim(replace(replace(replace(lower(toString(precio_venta)), 'bob', ''), 'bs.', ''), 'bs', ''))), 2))),",
+				"          costo_adquisicion = iif(isNull(costo_adquisicion) || trim(toString(costo_adquisicion)) == '', toFloat(0.0), toFloat(round(toFloat(trim(replace(replace(replace(lower(toString(costo_adquisicion)), 'bob', ''), 'bs.', ''), 'bs', ''))), 2))),",
+				"          stock_actual = abs(iifNull(toInteger(toFloat(trim(toString(stock_actual)))), 0)),",
+				"          stock_minimo = abs(iifNull(toInteger(toFloat(trim(toString(stock_minimo)))), 0)),",
+				"          ultima_reposicion = !isNull(codigo_producto) && !isNull(nombre_producto)) ~> TODO",
+				"TODO filter(!isNull(codigo_producto) && !isNull(nombre_producto)) ~> filter1",
+				"filter1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          id_venta as string,",
+				"          fecha as string,",
+				"          producto as string,",
+				"          cantidad as string,",
+				"          precio_unitario as string,",
+				"          nombre_cliente as string,",
+				"          cliente_email as string,",
+				"          sucursal as string,",
+				"          metodo_pago as string,",
+				"          vendedor as string,",
+				"          canal as string",
+				"     ),",
+				"     partitionFileNames:['Inventario_Limpio.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}
