@@ -1,0 +1,26 @@
+{
+	"name": "Ventas_SantaCruz_Casilimpio",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLake_Ventas",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "PLATA"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "PLATA",
+				"fileSystem": "datalake-ventas"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}

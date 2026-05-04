@@ -1,0 +1,118 @@
+{
+	"name": "df_Ventas_Santa_Cruz_de_BRONCE_a_PLATA",
+	"properties": {
+		"folder": {
+			"name": "BRONCE"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Ventas_SantaCruz_csv",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Ventas_SantaCruz_Casilimpio",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "TRIMvendedorclientenombreproductofecha"
+				},
+				{
+					"name": "NombreProducto"
+				},
+				{
+					"name": "LimpiarVariantesdeSC"
+				},
+				{
+					"name": "ArreglarPrecioyCantidad"
+				},
+				{
+					"name": "LimpiarVariantesdeFecha"
+				},
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "derivedColumn1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          id_venta as string,",
+				"          fecha as string,",
+				"          producto as string,",
+				"          cantidad as string,",
+				"          precio_unitario as string,",
+				"          sucursal as string,",
+				"          vendedor as string,",
+				"          cliente_nombre as string,",
+				"          cliente_email as string,",
+				"          metodo_pago as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 derive(vendedor = trim(vendedor),",
+				"          cliente_nombre = trim(cliente_nombre),",
+				"          producto = trim(producto),",
+				"          fecha = trim(fecha)) ~> TRIMvendedorclientenombreproductofecha",
+				"TRIMvendedorclientenombreproductofecha derive(producto = initCap(regexReplace(producto,'\\\\s+',' '))) ~> NombreProducto",
+				"NombreProducto derive(sucursal = iif(in(['SCZ','Santa Cruz','santa cruz','SC','Sta Cruz','Sta. Cruz','SANTA CRUZ'],sucursal),'Santa Cruz',sucursal)) ~> LimpiarVariantesdeSC",
+				"LimpiarVariantesdeSC derive(precio_unitario = iif(\r",
+				"    isNull(precio_unitario) || trim(toString(precio_unitario)) == '', \r",
+				"    toFloat(0.0), \r",
+				"    toFloat(round(toFloat(trim(replace(replace(lower(toString(precio_unitario)), 'bs.', ''), 'bs', ''))), 2))\r",
+				"),",
+				"          cantidad = toInteger(toFloat(trim(toString(cantidad))))) ~> ArreglarPrecioyCantidad",
+				"ArreglarPrecioyCantidad derive(fecha = coalesce(\r",
+				"toDate(fecha,'yyyy-MM-dd'),\r",
+				"toDate(fecha,'dd-MM-yyyy'),\r",
+				"toDate(fecha,'dd/MM/yyyy'),\r",
+				"toDate(fecha,'MM-dd-yyyy'),\r",
+				"toDate(fecha,'yyyy/MM/dd'),\r",
+				"toDate(fecha,'dd-MM-yyyy'),\r",
+				"toDate(fecha,'MMMM dd, yyyy'),\r",
+				"toDate(fecha,'dd/MMM/yyyy'))) ~> LimpiarVariantesdeFecha",
+				"LimpiarVariantesdeFecha filter(cantidad>0 && !isNull(precio_unitario) && !isNull(fecha)) ~> filter1",
+				"filter1 select(mapColumn(",
+				"          id_venta,",
+				"          fecha,",
+				"          producto,",
+				"          cantidad,",
+				"          precio_unitario,",
+				"          sucursal,",
+				"          vendedor,",
+				"          cliente_nombre,",
+				"          cliente_email,",
+				"          metodo_pago",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 derive(canal = 'Sucursal') ~> derivedColumn1",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['ventas_SC_Casilimpio.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}
