@@ -1,0 +1,17 @@
+{
+	"name": "df_Unir_Ventas",
+	"properties": {
+		"folder": {
+			"name": "BRONCE"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				""
+			]
+		}
+	}
+}
