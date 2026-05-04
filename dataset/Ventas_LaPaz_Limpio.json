@@ -13,6 +13,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": "ventas_LAPAZ_limpio.csv",
 				"folderPath": "PLATA",
 				"fileSystem": "datalake-ventas"
 			},

@@ -13,6 +13,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": "ventas_SC_Casilimpio.csv",
 				"folderPath": "PLATA",
 				"fileSystem": "datalake-ventas"
 			},
