@@ -8,20 +8,57 @@
 		"typeProperties": {
 			"sources": [
 				{
-					"name": "source2"
+					"dataset": {
+						"referenceName": "Ventas_Consolidadas",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Reporte_Gerencial_Ventas",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
-					"name": "aggregate1"
+					"name": "aggregate2"
 				}
 			],
 			"scriptLines": [
-				"source(allowSchemaDrift: true,",
-				"     validateSchema: false) ~> source2",
-				"source2 aggregate(groupBy(sucursal,",
-				"          producto)) ~> aggregate1"
+				"source(output(",
+				"          id_venta as string,",
+				"          fecha as date,",
+				"          producto as string,",
+				"          cantidad as short,",
+				"          precio_unitario as double,",
+				"          sucursal as string,",
+				"          vendedor as string,",
+				"          cliente_nombre as string,",
+				"          cliente_email as string,",
+				"          metodo_pago as string,",
+				"          canal as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 aggregate(groupBy(sucursal,",
+				"          producto),",
+				"     Total_Vendido = sum(toFloat(precio_unitario) * toInteger(cantidad)),",
+				"          Unidades_Vendidas = sum(toInteger(cantidad))) ~> aggregate2",
+				"aggregate2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['Reporte_Gerencial_Ventas.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
 			]
 		}
 	}

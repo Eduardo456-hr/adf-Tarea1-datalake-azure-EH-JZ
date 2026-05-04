@@ -1,0 +1,26 @@
+{
+	"name": "Reporte_Gerencial_Ventas",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLake_Ventas",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "ORO"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "ORO",
+				"fileSystem": "datalake-ventas"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
