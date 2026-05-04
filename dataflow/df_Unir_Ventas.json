@@ -32,7 +32,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "entas_Consolidadas_Plata",
+						"referenceName": "Ventas_Consolidadas",
 						"type": "DatasetReference"
 					},
 					"name": "sink1"
@@ -56,19 +56,6 @@
 				"source1, source2, source3 union(byName: true)~> union1",
 				"union1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     input(",
-				"          codigo_producto as string,",
-				"          nombre_producto as string,",
-				"          categoria as string,",
-				"          precio_venta as string,",
-				"          costo_adquisicion as string,",
-				"          stock_actual as string,",
-				"          stock_minimo as string,",
-				"          sucursal as string,",
-				"          proveedor as string,",
-				"          ultima_reposicion as string,",
-				"          activo as string",
-				"     ),",
 				"     partitionFileNames:['Ventas_Consolidadas_Plata.csv'],",
 				"     umask: 0022,",
 				"     preCommands: [],",

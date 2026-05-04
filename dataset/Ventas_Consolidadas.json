@@ -1,0 +1,27 @@
+{
+	"name": "Ventas_Consolidadas",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLake_Ventas",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "PLATA"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Ventas_Consolidadas_Plata.csv",
+				"folderPath": "PLATA",
+				"fileSystem": "datalake-ventas"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
