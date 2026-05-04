@@ -15,7 +15,15 @@
 					"name": "source1"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Ventas_SantaCruz_Casilimpio",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
 					"name": "select1"
@@ -24,7 +32,13 @@
 					"name": "TRIM"
 				},
 				{
-					"name": "derivedColumn1"
+					"name": "Fecha"
+				},
+				{
+					"name": "TODO"
+				},
+				{
+					"name": "filter1"
 				}
 			],
 			"scriptLines": [
@@ -56,7 +70,7 @@
 				"          cliente_email = {customer/email},",
 				"          sucursal = {customer/city},",
 				"          metodo_pago = payment_method,",
-				"          canal = channel",
+				"          vendedor = channel",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select1",
@@ -69,8 +83,33 @@
 				"          cliente_email = trim(cliente_email),",
 				"          sucursal = trim(sucursal),",
 				"          metodo_pago = trim(metodo_pago),",
-				"          canal = 'Sucursal') ~> TRIM",
-				"TRIM derive(fecha = coalesce(toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'yyyy-MM-dd'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'dd-MMM-yyyy'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'dd-MMMM-yyyy'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'MMMM dd yyyy'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'dd/MM/yyyy'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'dd-MM-yyyy'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'yyyy/MM/dd'))) ~> derivedColumn1"
+				"          canal = 'Sucursal',",
+				"          vendedor = trim(vendedor)) ~> TRIM",
+				"TRIM derive(fecha = coalesce(toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'yyyy-MM-dd'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'dd-MMM-yyyy'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'dd-MMMM-yyyy'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'MMMM dd yyyy'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'dd/MM/yyyy'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'dd-MM-yyyy'),toDate(trim(replace(replace(replace(toString(fecha),'T00:00:00',''),' de ','-'),',','')),'yyyy/MM/dd'))) ~> Fecha",
+				"Fecha derive(precio_unitario = iif(isNull(precio_unitario) || trim(toString(precio_unitario)) == '', toFloat(0.0), toFloat(round(toFloat(trim(replace(replace(replace(lower(toString(precio_unitario)), 'bob', ''), 'bs.', ''), 'bs', ''))), 2))),",
+				"          cantidad = abs(iifNull(toInteger(toFloat(trim(toString(cantidad)))), 0)),",
+				"          producto = initCap(trim(regexReplace(replace(toString(producto), '\"', ''), '\\\\s+', ' '))),",
+				"          nombre_cliente = iifNull(trim(toString(nombre_cliente)), 'Cliente Desconocido'),",
+				"          cliente_email = iifNull(trim(toString(cliente_email)), 'Sin Correo'),",
+				"          metodo_pago = iifNull(trim(toString(metodo_pago)), 'Desconocido'),",
+				"          sucursal = case(\r",
+				"    isNull(sucursal) || trim(toString(sucursal)) == '', 'No Especificada',\r",
+				"    in(['santa cruz', 'scz'], lower(trim(toString(sucursal)))), 'Santa Cruz',\r",
+				"    in(['cochabamba', 'cbba'], lower(trim(toString(sucursal)))), 'Cochabamba',\r",
+				"    in(['la paz', 'lp', 'lapaz'], lower(trim(toString(sucursal)))), 'La Paz',\r",
+				"    in(['potosi', 'potosí'], lower(trim(toString(sucursal)))), 'Potosí',\r",
+				"    initCap(trim(toString(sucursal)))\r",
+				")) ~> TODO",
+				"TODO filter(!isNull(id_venta) && !isNull(fecha) && !isNull(producto) && !isNull(cantidad) && !isNull(precio_unitario) && !isNull(sucursal) && !isNull(vendedor) && !isNull(nombre_cliente) && !isNull(cliente_email) && !isNull(metodo_pago)) ~> filter1",
+				"filter1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['Ventas_Online_Limpio.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
 			]
 		}
 	}
